@@ -1,1 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SMM ELITE | 5G PROTOCOL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --neon: #00f3ff; --danger: #ff0055; --success: #00ff9d; --bg: #050506; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            background-color: var(--bg); color: #fff; font-family: 'Rajdhani', sans-serif;
+            height: 100vh; display: flex; justify-content: center; align-items: center;
+            overflow: hidden; user-select: none; -webkit-user-select: none;
+            background-image: radial-gradient(circle at center, #0f172a 0%, #050506 100%);
+        }
+        .main-card {
+            width: 92%; max-width: 400px; background: rgba(10, 10, 15, 0.98);
+            border: 1px solid #222; border-radius: 24px; padding: 25px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.9); position: relative; text-align: center; border-top: 5px solid var(--neon);
+        }
+        .top-bar { display: flex; justify-content: space-between; margin-bottom: 20px; font-family: 'Orbitron', sans-serif; font-size: 10px; color: #555; }
+        .power-btn { cursor: pointer; font-size: 16px; transition: 0.3s; color: #222; }
+        .power-btn.active { color: var(--success); text-shadow: 0 0 15px var(--success); }
+        
+        h1 { font-family: 'Orbitron', sans-serif; font-size: 18px; letter-spacing: 2px; margin-bottom: 15px; color: var(--neon); }
+
+        /* Traffic Stats Styling */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; background: #000; padding: 15px; border-radius: 12px; border: 1px dashed #333; }
+        .stat-box { text-align: left; }
+        .stat-label { font-size: 9px; color: #666; text-transform: uppercase; display: block; }
+        .stat-value { font-family: 'Orbitron', sans-serif; font-size: 14px; color: var(--success); }
+
+        .input-box {
+            width: 100%; background: #000; border: 1px solid #333; padding: 16px; color: var(--neon);
+            font-family: 'Orbitron', sans-serif; text-align: center; border-radius: 12px; margin-bottom: 18px; outline: none;
+        }
+        .action-btn {
+            width: 100%; padding: 16px; background: transparent; border: 1px solid var(--neon);
+            color: var(--neon); font-family: 'Orbitron', sans-serif; font-weight: bold; cursor: pointer; border-radius: 12px;
+        }
+
+        .progress-wrap { margin-top: 10px; display: none; }
+        .progress-bar { width: 100%; height: 6px; background: #111; border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
+        .fill { width: 0%; height: 100%; background: var(--success); box-shadow: 0 0 10px var(--success); }
+        
+        .console-log { height: 40px; font-family: 'Courier New', monospace; font-size: 9px; color: #444; overflow: hidden; text-align: left; line-height: 1.2; margin-top: 10px; }
+        .footer-id { font-size: 9px; color: #222; margin-top: 25px; letter-spacing: 2px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="main-card">
+        <div class="top-bar">
+            <div id="sim-status">NODE: PENDING</div>
+            <div id="secret-sim" class="power-btn">⏻</div>
+        </div>
+
+        <div id="stage-1">
+            <h1>SYSTEM ACCESS</h1>
+            <input type="text" id="access-code" class="input-box" placeholder="ACCESS KEY">
+            <button class="action-btn" onclick="verifyCode()">LOGIN</button>
+        </div>
+
+        <div id="stage-2" style="display:none;">
+            <h1>5G HARDWARE</h1>
+            <p style="color:var(--danger); font-size:12px;">ERR: Physical 5G SIM missing.</p>
+            <button class="action-btn" onclick="checkSimAgain()" style="margin-top:20px;">RE-SCAN</button>
+        </div>
+
+        <div id="stage-3" style="display:none;">
+            <h1 id="title-3">INJECTING DATA</h1>
+            
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span class="stat-label">Down-Speed</span>
+                    <span class="stat-value" id="live-speed">0.0 MB/s</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Consumed</span>
+                    <span class="stat-value" id="live-data">0 MB</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Tunneling</span>
+                    <span class="stat-value" style="color:var(--neon)">SSL-v2</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Time Left</span>
+                    <span class="stat-value" id="countdown" style="color:white">05:00</span>
+                </div>
+            </div>
+
+            <button id="sync-btn" class="action-btn" onclick="syncData()">SYNC STREAM</button>
+            
+            <div class="progress-wrap" id="progress-wrap">
+                <div class="progress-bar" id="secret-skip-progress"><div id="fill" class="fill"></div></div>
+                <div class="console-log" id="console-log">> Initializing Tunnel...<br>> Port 8080 Active...</div>
+                <button id="resync-btn" class="action-btn" onclick="resetTimerOnly()" style="display:none; margin-top:15px; font-size:12px; border-color:var(--danger); color:var(--danger);">RE-SYNC STREAM</button>
+            </div>
+        </div>
+
+        <div id="stage-4" style="display:none;">
+            <h1 style="color:var(--success)">SYNC COMPLETE</h1>
+            <input type="text" id="tg-link" class="input-box" placeholder="PASTE LINK HERE">
+            <button class="action-btn" onclick="generateAndSend()" style="border-color:var(--success); color:var(--success);">FINALIZE</button>
+        </div>
+
+        <div class="footer-id" id="secret-sync">VHB-NODE: ACTIVE // ID: 009x7</div>
+    </div>
+
+    <script>
+        const SECRET_CODE = "MAM-AJFN-2025";
+        const BOT_USER = "A1VGhGfxev55l0YpgTE_bot";
+        let isSim = false, isSync = false, simT = 0, syncT = 0, skipT = 0, totalS = 300, timerInt;
+        let consumedMB = 0;
+
+        document.getElementById('secret-sim').onclick = () => { if(++simT === 3) { isSim = true; document.getElementById('sim-status').innerText = "5G_ACTIVE ✅"; simT=0; }};
+        document.getElementById('secret-sync').onclick = () => { if(++syncT === 5) { isSync = true; document.getElementById('secret-sync').style.color = "#00ff9d"; syncT=0; }};
+        document.getElementById('secret-skip-progress').onclick = () => { if(++skipT === 3) { totalS = 2; skipT=0; }};
+
+        // Long press to kill
+        let holdTimer;
+        document.body.addEventListener('touchstart', () => { if(isSync) holdTimer = setTimeout(killSystem, 5000); });
+        document.body.addEventListener('touchend', () => clearTimeout(holdTimer));
+
+        function killSystem() {
+            clearInterval(timerInt);
+            document.getElementById('title-3').innerText = "STREAM BROKEN";
+            document.getElementById('title-3').style.color = "var(--danger)";
+            document.getElementById('live-speed').innerText = "0.0 KB/s";
+            document.getElementById('resync-btn').style.display = "block";
+        }
+
+        function resetTimerOnly() {
+            totalS = 300; consumedMB = 0;
+            document.getElementById('title-3').style.color = "var(--neon)";
+            document.getElementById('title-3').innerText = "INJECTING DATA";
+            document.getElementById('resync-btn').style.display = "none";
+            syncData();
+        }
+
+        function verifyCode() {
+            if (document.getElementById('access-code').value.trim() === SECRET_CODE) {
+                document.getElementById('stage-1').style.display='none'; document.getElementById('stage-2').style.display='block';
+            } else { alert("Key Error"); }
+        }
+
+        function checkSimAgain() {
+            if (isSim) { document.getElementById('stage-2').style.display='none'; document.getElementById('stage-3').style.display='block'; }
+            else { alert("5G SIM not found."); }
+        }
+
+        function syncData() {
+            if (!isSync) { alert("Start download first."); return; }
+            document.getElementById('sync-btn').style.display='none';
+            document.getElementById('progress-wrap').style.display='block';
+            
+            const logArr = ["> Injecting View Packets...", "> Tunneling Proxy...", "> Shifting IP...", "> Bypassing Auth...", "> Encrypting Stream..."];
+            
+            timerInt = setInterval(() => {
+                totalS--;
+                
+                // Live Speed & Data Calculation (Fake but looks real)
+                let speed = (Math.random() * (15.5 - 2.1) + 2.1).toFixed(1);
+                consumedMB += parseFloat(speed) / 5;
+                
+                document.getElementById('live-speed').innerText = speed + " MB/s";
+                document.getElementById('live-data').innerText = Math.floor(consumedMB) + " MB";
+                
+                // Timer
+                let m = Math.floor(totalS/60), s = totalS%60;
+                document.getElementById('countdown').innerHTML = (m<10?"0"+m:m)+":"+(s<10?"0"+s:s);
+                document.getElementById('fill').style.width = ((300 - totalS)/300)*100 + "%";
+
+                // Live Logs
+                if(totalS % 3 === 0) {
+                    let log = logArr[Math.floor(Math.random()*logArr.length)];
+                    document.getElementById('console-log').innerHTML = log + "<br>" + document.getElementById('console-log').innerHTML;
+                }
+
+                if (totalS <= 0) {
+                    clearInterval(timerInt);
+                    document.getElementById('stage-3').style.display='none'; document.getElementById('stage-4').style.display='block';
+                }
+            }, 1000);
+        }
+
+        function generateAndSend() {
+            const link = document.getElementById('tg-link').value.trim();
+            const msg = `CODE: ELITE-${Math.floor(Math.random()*99999)}\nLINK: ${link}`;
+            window.location.href = `https://t.me/${BOT_USER}?text=${encodeURIComponent(msg)}`;
+        }
+    </script>
+</body>
+</html>
 
